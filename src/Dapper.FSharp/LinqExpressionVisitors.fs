@@ -278,8 +278,14 @@ let visitPropertySelector<'T, 'Prop> (propertySelector: Expression<Func<'T, 'Pro
         | MethodCall m when m.Method.Name = "Invoke" ->
             // Handle tuples
             visit m.Object
+        | MethodCall opt when opt.Type |> isOptionType ->        
+            if opt.Arguments.Count > 0 then
+                // Option.Some
+                match opt.Arguments.[0] with
+                | Member m -> visit m
+                | _ -> notImplMsg (sprintf "MethodCall without Member not implemented %A" opt.Arguments.[0])
+            else notImplMsg (sprintf "optional Arguments Count less then 0 %A" exp)
         | Member m -> 
             m.Member
         | _ -> notImpl()
-
     visit (propertySelector :> Expression)
